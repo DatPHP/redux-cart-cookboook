@@ -1,0 +1,14 @@
+# Neon là managed Postgres (cloud), nên compose này KHÔNG chạy container
+# Postgres riêng — chỉ chạy app và trỏ DATABASE_URL sang Neon qua .env.
+# Nếu muốn test hoàn toàn offline, có thể thêm service "postgres" ở đây
+# và đổi DATABASE_URL sang localhost khi dev.
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    restart: unless-stopped
