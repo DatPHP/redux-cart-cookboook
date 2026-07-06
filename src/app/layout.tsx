@@ -15,7 +15,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Cart Redux Practice",
-  description: "Mini app luyện tập Redux Thunk + Saga: Cart, Notification realtime",
+  description:
+    "Mini app luyện tập Redux Thunk + Saga: Cart, Notification realtime",
 };
 
 export default function RootLayout({

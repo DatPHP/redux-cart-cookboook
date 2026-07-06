@@ -5,8 +5,8 @@ export default function Home() {
         🛒 Cart Redux Practice
       </h1>
       <p className="max-w-md text-zinc-600 dark:text-zinc-400">
-        Phase 1 (setup) đã xong. Phase 2 (cartSlice + thunk + saga) sẽ thêm
-        UI danh sách sản phẩm và giỏ hàng ở đây.
+        Phase 1 (setup) đã xong. Phase 2 (cartSlice + thunk + saga) sẽ thêm UI
+        danh sách sản phẩm và giỏ hàng ở đây.
       </p>
     </div>
   );

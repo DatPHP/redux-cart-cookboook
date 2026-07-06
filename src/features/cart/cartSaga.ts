@@ -1,0 +1,76 @@
+import { call, cancel, fork, put, take, delay } from "redux-saga/effects";
+import type { Task } from "redux-saga";
+import { cartApi } from "@/lib/cartApi";
+import {
+  updateQuantityRequested,
+  updateQuantityConfirmed,
+  updateQuantityRollback,
+} from "./cartSlice";
+
+export const DEBOUNCE_MS = 400;
+
+// Worker: xử lý 1 lần debounce + gọi API cho 1 itemId cụ thể.
+// Tách riêng thành function để redux-saga-test-plan có thể test độc lập
+// mà không cần chạy toàn bộ watcher.
+export function* handleUpdateQuantity(
+  itemId: number,
+  quantity: number,
+  previousQuantity: number,
+  confirmedQuantity: Map<number, number>,
+) {
+  yield delay(DEBOUNCE_MS);
+  try {
+    yield call(cartApi.updateItemQuantity, itemId, quantity);
+    yield put(updateQuantityConfirmed({ itemId }));
+    confirmedQuantity.set(itemId, quantity);
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Cập nhật số lượng thất bại";
+    yield put(
+      updateQuantityRollback({
+        itemId,
+        quantity: previousQuantity,
+        error: message,
+      }),
+    );
+  }
+}
+
+// Watcher: vì sao KHÔNG dùng takeLatest() có sẵn của redux-saga?
+// takeLatest() chỉ giữ đúng 1 task cho TOÀN BỘ pattern — nếu user đổi
+// quantity của sản phẩm A rồi ngay lập tức đổi quantity sản phẩm B,
+// takeLatest sẽ huỷ nhầm task của A (chưa kịp gọi API) để chạy B.
+// Ở đây tự quản lý 1 Map<itemId, Task> để mỗi sản phẩm có debounce
+// độc lập — đổi quantity của A không ảnh hưởng tới B.
+export function* watchUpdateQuantity() {
+  const runningTasks = new Map<number, Task>();
+  const confirmedQuantity = new Map<number, number>();
+
+  while (true) {
+    const action: ReturnType<typeof updateQuantityRequested> = yield take(
+      updateQuantityRequested.type,
+    );
+    const { itemId, quantity } = action.payload;
+
+    const existingTask = runningTasks.get(itemId);
+    if (existingTask) {
+      yield cancel(existingTask);
+    }
+
+    // Lần đầu tiên gặp itemId này trong phiên làm việc: coi quantity hiện tại
+    // (trước khi user bấm) là mốc rollback an toàn.
+    if (!confirmedQuantity.has(itemId)) {
+      confirmedQuantity.set(itemId, quantity);
+    }
+    const previousQuantity = confirmedQuantity.get(itemId) as number;
+
+    const task: Task = yield fork(
+      handleUpdateQuantity,
+      itemId,
+      quantity,
+      previousQuantity,
+      confirmedQuantity,
+    );
+    runningTasks.set(itemId, task);
+  }
+}
