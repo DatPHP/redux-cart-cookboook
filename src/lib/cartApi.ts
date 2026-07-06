@@ -1,0 +1,48 @@
+import { getCartSessionId } from "./cartSession";
+import type { CartDTO } from "@/types/cart";
+
+// Tất cả request đều đính kèm header x-cart-session-id để backend biết
+// đây là giỏ hàng của ai (xem src/lib/cartRepository.ts).
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(path, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      "x-cart-session-id": getCartSessionId(),
+      ...(options.headers ?? {}),
+    },
+  });
+
+  if (!res.ok) {
+    const body = await res
+      .json()
+      .catch(() => ({ message: `HTTP ${res.status}` }));
+    throw new Error(body.message ?? `Request thất bại (${res.status})`);
+  }
+
+  return res.json() as Promise<T>;
+}
+
+// cartThunk và cartSaga đều gọi qua các hàm này — business logic gọi API
+// chỉ viết 1 lần ở đây, thunk/saga chỉ khác nhau ở cách ĐIỀU PHỐI
+// (orchestration), không phải ở cách gọi API.
+export const cartApi = {
+  fetchCart: () => request<CartDTO>("/api/cart"),
+
+  addItem: (productId: number, quantity = 1) =>
+    request<CartDTO>("/api/cart/items", {
+      method: "POST",
+      body: JSON.stringify({ productId, quantity }),
+    }),
+
+  updateItemQuantity: (itemId: number, quantity: number) =>
+    request<CartDTO>(`/api/cart/items/${itemId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ quantity }),
+    }),
+
+  removeItem: (itemId: number) =>
+    request<CartDTO>(`/api/cart/items/${itemId}`, { method: "DELETE" }),
+
+  clearCart: () => request<CartDTO>("/api/cart", { method: "DELETE" }),
+};

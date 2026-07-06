@@ -6,17 +6,17 @@ kết hợp WebSocket (Socket.io) bắn notification realtime.
 
 ## Stack
 
-| Layer      | Công nghệ |
-|------------|-----------|
-| Framework  | Next.js (App Router) + TypeScript |
+| Layer      | Công nghệ                                                                                                            |
+| ---------- | -------------------------------------------------------------------------------------------------------------------- |
+| Framework  | Next.js (App Router) + TypeScript                                                                                    |
 | State      | Redux Toolkit + Redux Thunk (action đơn giản) + Redux Saga (side-effect phức tạp: debounce, eventChannel cho socket) |
-| Data fetch | @tanstack/react-query (cho Product list / Order history — tách biệt với Redux) |
-| DB         | Neon Postgres qua Prisma ORM |
-| Realtime   | Socket.io |
-| UI         | TailwindCSS |
-| Test       | Jest |
-| CI/CD      | GitHub Actions |
-| Container  | Docker |
+| Data fetch | @tanstack/react-query (cho Product list / Order history — tách biệt với Redux)                                       |
+| DB         | Neon Postgres qua Prisma ORM                                                                                         |
+| Realtime   | Socket.io                                                                                                            |
+| UI         | TailwindCSS                                                                                                          |
+| Test       | Jest                                                                                                                 |
+| CI/CD      | GitHub Actions                                                                                                       |
+| Container  | Docker                                                                                                               |
 
 ## Cấu trúc thư mục
 
@@ -67,6 +67,7 @@ prisma/
 ```bash
 docker compose up --build
 ```
+
 (Neon là managed Postgres nên container chỉ chạy app, không chạy DB local — `.env` cần trỏ đúng Neon connection string.)
 
 ## Trạng thái các Phase
