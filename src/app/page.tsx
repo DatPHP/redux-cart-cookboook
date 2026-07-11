@@ -1,13 +1,31 @@
+import ProductList from "@/components/ProductList";
+import CartPanel from "@/components/CartPanel";
+
 export default function Home() {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-zinc-50 px-6 text-center dark:bg-black">
-      <h1 className="text-3xl font-semibold tracking-tight text-black dark:text-zinc-50">
-        🛒 Cart Redux Practice
-      </h1>
-      <p className="max-w-md text-zinc-600 dark:text-zinc-400">
-        Phase 1 (setup) đã xong. Phase 2 (cartSlice + thunk + saga) sẽ thêm UI
-        danh sách sản phẩm và giỏ hàng ở đây.
-      </p>
+    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-10">
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          🛒 Cart Redux Practice
+        </h1>
+        <p className="mt-1 text-sm text-zinc-500">
+          Phase 3 — Product list (react-query) + Cart panel (Redux Toolkit +
+          Thunk + Saga)
+        </p>
+      </header>
+
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
+        <section>
+          <h2 className="mb-3 font-semibold text-zinc-900 dark:text-zinc-50">
+            Sản phẩm
+          </h2>
+          <ProductList />
+        </section>
+
+        <aside>
+          <CartPanel />
+        </aside>
+      </div>
     </div>
   );
 }
