@@ -1,75 +1,53 @@
-// ============================================================
-// Prisma Schema — Cart Redux Practice App
-// DB: Neon Postgres
-// Thiết kế rút gọn dựa trên schema CRM gốc, tập trung vào
-// luồng Cart -> Order để practice Redux Thunk + Saga.
-// ============================================================
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")   // pooled (-pooler) — dùng lúc app chạy (nhiều connection ngắn hạn)
-  directUrl = env("DIRECT_URL")     // direct (không -pooler) — dùng khi migrate/seed
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// ==================== PRODUCT ====================
-// Đại diện cho 1 sản phẩm trong "kho hàng".
-// stock dùng để kiểm tra tồn kho khi thêm vào cart / đặt hàng.
 model Product {
-  id        Int      @id @default(autoincrement())
-  name      String
-  price     Decimal  @db.Decimal(10, 2)
-  stock     Int      @default(0) // số lượng còn trong kho
-  image     String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id         Int         @id @default(autoincrement())
+  name       String
+  price      Decimal     @db.Decimal(10, 2)
+  stock      Int         @default(0)
+  image      String?
+  isActive   Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
   cartItems  CartItem[]
   orderItems OrderItem[]
 
   @@map("products")
 }
 
-// ==================== CART ====================
-// Mỗi user (hoặc guest session) có duy nhất 1 cart đang active.
-// Cart được persist xuống DB (thay vì chỉ localStorage) để có
-// nhiều bài tập cho Redux Saga: optimistic update, rollback khi
-// API lỗi, debounce khi tăng/giảm số lượng liên tục, v.v.
 model Cart {
   id        Int        @id @default(autoincrement())
-  userId    Int?       // null nếu là guest, dùng sessionId để định danh
+  userId    Int?
   sessionId String?    @unique
-  items     CartItem[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  items     CartItem[]
 
   @@map("carts")
 }
 
-// ==================== CART ITEM ====================
-// Mỗi dòng là 1 sản phẩm trong cart kèm số lượng.
-// @@unique đảm bảo 1 sản phẩm chỉ xuất hiện 1 dòng/cart —
-// khi "thêm lại" sản phẩm đã có, backend sẽ update quantity
-// thay vì tạo dòng mới (upsert logic ở API layer).
 model CartItem {
   id        Int      @id @default(autoincrement())
   cartId    Int
-  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
   productId Int
-  product   Product  @relation(fields: [productId], references: [id])
   quantity  Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id])
 
   @@unique([cartId, productId])
   @@map("cart_items")
 }
 
-// ==================== ORDER ====================
 model Order {
   id         Int         @id @default(autoincrement())
   orderCode  String      @unique
@@ -77,10 +55,32 @@ model Order {
   status     OrderStatus @default(PENDING)
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
-
   orderItems OrderItem[]
 
   @@map("orders")
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2)
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
 }
 
 enum OrderStatus {
@@ -88,34 +88,4 @@ enum OrderStatus {
   PAID
   COMPLETED
   CANCELLED
-}
-
-// ==================== ORDER ITEM ====================
-// Snapshot lại unitPrice tại thời điểm đặt hàng (không tham
-// chiếu trực tiếp giá hiện tại của Product, tránh sai lệch
-// nếu giá sản phẩm thay đổi sau này).
-model OrderItem {
-  id        Int     @id @default(autoincrement())
-  orderId   Int
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId Int
-  product   Product @relation(fields: [productId], references: [id])
-  quantity  Int
-  unitPrice Decimal @db.Decimal(10, 2)
-
-  @@map("order_items")
-}
-
-// ==================== NOTIFICATION ====================
-// Được tạo khi có event quan trọng (order created, order status
-// changed...) và bắn qua WebSocket cho chuông thông báo ở client.
-model Notification {
-  id        Int      @id @default(autoincrement())
-  message   String
-  type      String   // cart_updated | order_created | order_paid | order_completed | order_cancelled
-  isRead    Boolean  @default(false)
-  metadata  Json?    // { orderId, orderCode, cartId, ... }
-  createdAt DateTime @default(now())
-
-  @@map("notifications")
 }
