@@ -16,6 +16,27 @@ Mini app luyện tập **Redux Toolkit + Redux Thunk + Redux Saga** với chức
 | CI/CD      | GitHub Actions                                                                                                         |
 | Container  | Docker                                                                                                                 |
 
+## Business & Architectural Ideology (Thinking)
+
+- **Separation of Concerns (SoC):** 
+  - Server state (Products, Orders) is managed by **React Query**, optimizing for caching, background re-fetching, and declarative data fetching.
+  - Client state and complex synchronous/asynchronous flows (Cart interactions, optimistic updates, notifications via Websockets) are managed by **Redux Toolkit** combined with **Redux Saga** & **Redux Thunk**.
+- **Performance First (Optimistic Updates & Debouncing):** UI reacts instantly for a seamless user experience. Updates are reflected immediately (Optimistic Update) and rolled back on API failure. Debounce strategies in Saga are applied to prevent spamming API requests when rapidly modifying cart quantities.
+- **Scalability & Maintainability:** The codebase leverages a feature-based folder structure (e.g., `src/features/cart`) rather than file-type grouping, making it highly modular and readable as the application scales.
+- **Realtime Integration:** Notifications (e.g., cart checkout, system alerts) are pushed in realtime via Socket.io leveraging the Redux Saga `eventChannel` pattern to cleanly map socket events to Redux actions.
+
+## Features
+
+- **Products Management:** List fetching utilizing `React Query`.
+- **Advanced Cart Operations:**
+  - Add / Remove Items.
+  - Update quantities with debouncing.
+  - Clear entire cart.
+  - Optimistic UI Updates & Error Rollbacks.
+- **Realtime Notifications:** WebSocket-based notification system via Socket.io to alert users in real-time.
+- **Robust State Management:** Combining the strengths of Thunk (simple async/sync logic) and Saga (complex side-effects, cancellations, debouncing, websockets).
+- **Persistent Data:** Syncs client state effectively with Neon Postgres (Serverless DB).
+
 ## Cấu trúc thư mục
 
 ```text
@@ -30,9 +51,11 @@ cart-redux-book/
 │   │   └── page.tsx           # Main page with ProductList & CartPanel
 │   ├── components/            # UI Components
 │   │   ├── ProductList.tsx    # React Query integrated product list
-│   │   └── CartPanel.tsx      # Redux connected cart UI
+│   │   ├── CartPanel.tsx      # Redux connected cart UI
+│   │   └── NotificationBell.tsx # Socket.io notification bell component
 │   ├── features/              # Feature slices
 │   │   ├── cart/              # Cart Slice, Saga, Thunks & Tests
+│   │   ├── notification/      # Notification Slice & Saga (Socket.io)
 │   │   └── products/          # React Query hooks for products
 │   ├── lib/                   # Utilities and configurations
 │   │   ├── prisma.ts          # Prisma client singleton
@@ -42,8 +65,11 @@ cart-redux-book/
 │   │   ├── index.ts           # Store config & middleware
 │   │   ├── rootSaga.ts        # Root saga
 │   │   ├── hooks.ts           # Typed Redux hooks
-│   │   └── StoreProvider.tsx  # Redux Provider wrapper
+│   │   ├── appSlice.ts        # Global application state
+│   │   ├── StoreProvider.tsx  # Redux Provider wrapper
+│   │   └── QueryProvider.tsx  # React Query Provider wrapper
 │   └── types/                 # Shared TypeScript types
+├── server.ts                  # Custom server for Socket.io & Next.js integration
 ├── Dockerfile                 # Docker configuration
 └── docker-compose.yml         # Docker compose configuration
 ```
@@ -67,7 +93,7 @@ cart-redux-book/
    ```bash
    npm run db:seed
    ```
-6. Chạy dev server:
+6. Chạy dev server (sẽ chạy qua custom server với socket.io):
    ```bash
    npm run dev
    ```
@@ -95,5 +121,5 @@ docker compose up --build
 - [x] **Phase 1** — Setup Next.js + Tailwind + Prisma schema + Redux store skeleton + Docker
 - [x] **Phase 2** — Core Redux Cart: cartSlice, cartThunk (fetchCart/addItemToCart/removeCartItem/clearCart), cartSaga (debounce per-itemId + optimistic update + rollback), API routes, 10 unit test
 - [x] **Phase 3** — UI: ProductList (react-query) + CartPanel (Redux) — verify optimistic update + debounce trên trình duyệt thật, cart persist qua Neon
-- [ ] **Phase 4** — WebSocket notification: Socket.io server, eventChannel trong saga, notification bell UI
+- [x] **Phase 4** — WebSocket notification: Socket.io server, eventChannel trong saga, notification bell UI
 - [ ] **Phase 5** — CI/CD (GitHub Actions) + mở rộng test coverage + (optional) BullMQ queue cho xử lý Order async
