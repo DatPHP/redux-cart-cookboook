@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateCart, serializeCart } from "@/lib/cartRepository";
 import { ApiError, handleApiError } from "@/lib/apiError";
+import { createAndEmitNotification } from "@/lib/notificationRepository";
 
 // POST /api/cart/items — thêm sản phẩm vào giỏ.
 // Nếu sản phẩm đã có trong giỏ, CỘNG DỒN quantity (không tạo dòng mới) —
@@ -22,9 +23,7 @@ export async function POST(req: NextRequest) {
       throw new ApiError(400, "quantity phải là số nguyên dương");
     }
 
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
-    });
+    const product = await prisma.product.findUnique({ where: { id: productId } });
     if (!product || !product.isActive) {
       throw new ApiError(404, "Sản phẩm không tồn tại hoặc đã ngừng bán");
     }
@@ -42,6 +41,16 @@ export async function POST(req: NextRequest) {
       update: { quantity: nextQuantity },
       create: { cartId: cart.id, productId, quantity: nextQuantity },
     });
+
+    // Không dùng await ở đây để không làm chậm response trả về cho user —
+    // notification là "phụ", cart mutation chính mới là thứ user đang chờ.
+    createAndEmitNotification({
+      cartId: cart.id,
+      sessionId,
+      message: `Đã thêm "${product.name}" vào giỏ hàng`,
+      type: "cart_item_added",
+      metadata: { productId, quantity },
+    }).catch((err) => console.error("[notification] Lỗi khi tạo thông báo:", err));
 
     const updated = await getOrCreateCart(sessionId);
     return Response.json(serializeCart(updated));

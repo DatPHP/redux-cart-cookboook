@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import createSagaMiddleware from "redux-saga";
 import appReducer from "./appSlice";
 import cartReducer from "@/features/cart/cartSlice";
+import notificationReducer from "@/features/notification/notificationSlice";
 import { rootSaga } from "./rootSaga";
 
 export function makeStore() {
@@ -11,7 +12,7 @@ export function makeStore() {
     reducer: {
       app: appReducer,
       cart: cartReducer,
-      // notification: notificationReducer, // Phase 3
+      notification: notificationReducer,
     },
     middleware: (getDefault) =>
       getDefault({

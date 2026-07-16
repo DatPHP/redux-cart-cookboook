@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateCart, serializeCart } from "@/lib/cartRepository";
 import { ApiError, handleApiError } from "@/lib/apiError";
+import { createAndEmitNotification } from "@/lib/notificationRepository";
 
 function requireSessionId(req: NextRequest): string {
   const sessionId = req.headers.get("x-cart-session-id");
@@ -25,7 +26,17 @@ export async function DELETE(req: NextRequest) {
   try {
     const sessionId = requireSessionId(req);
     const cart = await getOrCreateCart(sessionId);
-    await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+
+    if (cart.items.length > 0) {
+      await prisma.cartItem.deleteMany({ where: { cartId: cart.id } });
+      createAndEmitNotification({
+        cartId: cart.id,
+        sessionId,
+        message: "Đã xoá toàn bộ giỏ hàng",
+        type: "cart_cleared",
+      }).catch((err) => console.error("[notification] Lỗi khi tạo thông báo:", err));
+    }
+
     return Response.json({ id: cart.id, items: [] });
   } catch (err) {
     return handleApiError(err);
