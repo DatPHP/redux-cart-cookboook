@@ -5,6 +5,7 @@ import cartReducer, {
   updateQuantityRollback,
   fetchCart,
   removeCartItem,
+  itemRemovedExternally,
 } from "./cartSlice";
 import type { CartItemDTO } from "@/types/cart";
 
@@ -111,5 +112,21 @@ describe("cartSlice reducers", () => {
 
     expect(next.status).toBe("failed");
     expect(next.error).toBe("Không tìm thấy item trong giỏ hàng");
+  });
+
+  it("itemRemovedExternally: xoá hẳn item khỏi state (KHÔNG rollback quantity) khi item đã bị xoá do race condition", () => {
+    const state = makeState({
+      items: [makeItem({ id: 1 }), makeItem({ id: 2, productId: 20 })],
+      mutatingItemIds: [1],
+    });
+    const next = cartReducer(
+      state,
+      itemRemovedExternally({ itemId: 1, error: "Sản phẩm này đã bị xoá khỏi giỏ trước đó" })
+    );
+
+    expect(next.items).toHaveLength(1);
+    expect(next.items[0].id).toBe(2);
+    expect(next.mutatingItemIds).toEqual([]);
+    expect(next.error).toBe("Sản phẩm này đã bị xoá khỏi giỏ trước đó");
   });
 });

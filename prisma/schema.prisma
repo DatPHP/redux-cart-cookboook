@@ -24,12 +24,13 @@ model Product {
 }
 
 model Cart {
-  id        Int        @id @default(autoincrement())
-  userId    Int?
-  sessionId String?    @unique
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id        Int            @id @default(autoincrement())
+  userId    Int?           // null nếu là guest, dùng sessionId để định danh
+  sessionId String?        @unique
   items     CartItem[]
+  notifications Notification[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
   @@map("carts")
 }
@@ -75,11 +76,17 @@ model OrderItem {
 model Notification {
   id        Int      @id @default(autoincrement())
   message   String
-  type      String
+  type      String   // cart_updated | order_created | order_paid | order_completed | order_cancelled
   isRead    Boolean  @default(false)
-  metadata  Json?
+  metadata  Json?    // { orderId, orderCode, cartId, ... }
   createdAt DateTime @default(now())
 
+  // Thông báo thuộc về giỏ hàng nào — dùng để query "thông báo của tôi"
+  // qua GET /api/notifications (join theo sessionId -> cartId).
+  cartId Int?
+  cart   Cart? @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  @@index([cartId])
   @@map("notifications")
 }
 

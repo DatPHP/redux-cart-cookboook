@@ -1,6 +1,18 @@
 import { getCartSessionId } from "./cartSession";
 import type { CartDTO } from "@/types/cart";
 
+// Giữ lại status code thay vì chỉ có message string — cartSaga cần phân
+// biệt lỗi 404 "item đã bị xoá trước đó" (race condition với DELETE chạy
+// song song) khỏi các lỗi khác (409 hết hàng, mất mạng...) để xử lý khác
+// nhau (xem cartSaga.ts).
+export class ApiClientError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
 // Tất cả request đều đính kèm header x-cart-session-id để backend biết
 // đây là giỏ hàng của ai (xem src/lib/cartRepository.ts).
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -14,10 +26,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   });
 
   if (!res.ok) {
-    const body = await res
-      .json()
-      .catch(() => ({ message: `HTTP ${res.status}` }));
-    throw new Error(body.message ?? `Request thất bại (${res.status})`);
+    const body = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
+    throw new ApiClientError(res.status, body.message ?? `Request thất bại (${res.status})`);
   }
 
   return res.json() as Promise<T>;

@@ -1,10 +1,11 @@
 import { call, cancel, fork, put, take, delay } from "redux-saga/effects";
 import type { Task } from "redux-saga";
-import { cartApi } from "@/lib/cartApi";
+import { cartApi, ApiClientError } from "@/lib/cartApi";
 import {
   updateQuantityRequested,
   updateQuantityConfirmed,
   updateQuantityRollback,
+  itemRemovedExternally,
 } from "./cartSlice";
 
 export const DEBOUNCE_MS = 400;
@@ -26,6 +27,19 @@ export function* handleUpdateQuantity(
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Cập nhật số lượng thất bại";
+
+    // 404 ở đây có ý nghĩa ĐẶC BIỆT: item đã bị 1 request DELETE khác xoá
+    // mất trong lúc debounce đang chờ (race condition — vd user giảm
+    // quantity xuống 0 trong lúc 1 task debounce trước đó của CÙNG item
+    // này vẫn đang chờ 400ms). KHÔNG dùng rollback ở đây — rollback sẽ
+    // "hồi sinh" 1 item ma đã bị xoá thật ở DB. Thay vào đó xoá hẳn item
+    // khỏi state cho khớp thực tế. Mọi lỗi khác (409 hết hàng, mất mạng,
+    // 500...) vẫn rollback như bình thường.
+    if (err instanceof ApiClientError && err.status === 404) {
+      yield put(itemRemovedExternally({ itemId, error: message }));
+      return;
+    }
+
     yield put(
       updateQuantityRollback({
         itemId,
