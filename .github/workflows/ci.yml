@@ -1,0 +1,59 @@
+name: CI
+
+# Chạy trên mọi push vào main, và mọi Pull Request nhắm vào main — đúng
+# workflow đã dùng suốt dự án (branch riêng cho từng phase -> PR -> merge).
+# Thêm check CI vào PR giúp phát hiện lỗi TRƯỚC khi merge, thay vì tự chạy
+# lint/test bằng tay rồi quên (điều đã xảy ra vài lần ở các phase trước).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# DATABASE_URL/DIRECT_URL ở đây là URL GIẢ, không trỏ tới Neon thật.
+# `prisma generate` chỉ cần đọc schema.prisma để sinh type — KHÔNG cần kết
+# nối DB thật (chỉ `migrate`/`db push`/runtime query mới cần). Test cũng
+# không chạm DB thật (mock toàn bộ). Build cũng vậy — API route là dynamic,
+# không được prerender lúc build nên không gọi Prisma lúc build.
+env:
+  DATABASE_URL: "postgresql://user:password@localhost:5432/dummy"
+  DIRECT_URL: "postgresql://user:password@localhost:5432/dummy"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+      - run: npm ci
+      - run: npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+      - run: npm ci
+      # Không bắt buộc (không có test nào chạm Prisma thật — xem mock trong
+      # cartRepository.test.ts), nhưng vẫn chạy để test sát với production
+      # nhất có thể và phát hiện sớm nếu schema.prisma có lỗi cú pháp.
+      - run: npx prisma generate
+      - run: npm test
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run build
