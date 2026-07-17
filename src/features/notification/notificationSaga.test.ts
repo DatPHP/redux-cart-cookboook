@@ -10,8 +10,9 @@ import type { NotificationDTO } from "@/types/notification";
 // jest.fn() bọc quanh off() để verify saga có gỡ listener đúng lúc không.
 function createFakeSocket() {
   const emitter = new EventEmitter();
-  const offSpy = jest.fn((event: string, handler: (...args: unknown[]) => void) =>
-    emitter.off(event, handler)
+  const offSpy = jest.fn(
+    (event: string, handler: (...args: unknown[]) => void) =>
+      emitter.off(event, handler),
   );
 
   const socket = {
@@ -22,7 +23,8 @@ function createFakeSocket() {
   return {
     socket,
     offSpy,
-    emitFromServer: (payload: NotificationDTO) => emitter.emit("notification", payload),
+    emitFromServer: (payload: NotificationDTO) =>
+      emitter.emit("notification", payload),
   };
 }
 
@@ -38,7 +40,7 @@ describe("notificationSaga — watchSocketNotifications", () => {
     const task = runSaga(
       { dispatch: (action) => dispatched.push(action), getState: () => ({}) },
       watchSocketNotifications,
-      socket
+      socket,
     );
     await tick();
 
@@ -64,7 +66,7 @@ describe("notificationSaga — watchSocketNotifications", () => {
     const task = runSaga(
       { dispatch: (action) => dispatched.push(action), getState: () => ({}) },
       watchSocketNotifications,
-      socket
+      socket,
     );
     await tick();
 
@@ -85,8 +87,12 @@ describe("notificationSaga — watchSocketNotifications", () => {
     await tick();
 
     expect(dispatched).toHaveLength(2);
-    expect((dispatched[0] as ReturnType<typeof notificationReceived>).payload.id).toBe(1);
-    expect((dispatched[1] as ReturnType<typeof notificationReceived>).payload.id).toBe(2);
+    expect(
+      (dispatched[0] as ReturnType<typeof notificationReceived>).payload.id,
+    ).toBe(1);
+    expect(
+      (dispatched[1] as ReturnType<typeof notificationReceived>).payload.id,
+    ).toBe(2);
 
     task.cancel();
   });
@@ -94,7 +100,11 @@ describe("notificationSaga — watchSocketNotifications", () => {
   it("gỡ listener khỏi socket khi task bị cancel — tránh leak/nhận trùng khi HMR reload", async () => {
     const { socket, offSpy } = createFakeSocket();
 
-    const task = runSaga({ dispatch: () => {}, getState: () => ({}) }, watchSocketNotifications, socket);
+    const task = runSaga(
+      { dispatch: () => {}, getState: () => ({}) },
+      watchSocketNotifications,
+      socket,
+    );
     await tick();
 
     task.cancel();
@@ -109,7 +119,7 @@ describe("notificationSaga — watchSocketNotifications", () => {
     const task = runSaga(
       { dispatch: (action) => dispatched.push(action), getState: () => ({}) },
       watchSocketNotifications,
-      null
+      null,
     );
     await tick();
 

@@ -19,7 +19,9 @@ export default function Home() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
         <section>
-          <h2 className="mb-3 font-semibold text-zinc-900 dark:text-zinc-50">Sản phẩm</h2>
+          <h2 className="mb-3 font-semibold text-zinc-900 dark:text-zinc-50">
+            Sản phẩm
+          </h2>
           <ProductList />
         </section>
 

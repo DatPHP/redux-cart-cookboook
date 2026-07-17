@@ -6,7 +6,9 @@ import notificationReducer, {
 } from "./notificationSlice";
 import type { NotificationDTO } from "@/types/notification";
 
-function makeNotification(overrides: Partial<NotificationDTO> = {}): NotificationDTO {
+function makeNotification(
+  overrides: Partial<NotificationDTO> = {},
+): NotificationDTO {
   return {
     id: 1,
     message: 'Đã thêm "Áo thun basic" vào giỏ hàng',
@@ -17,7 +19,9 @@ function makeNotification(overrides: Partial<NotificationDTO> = {}): Notificatio
   };
 }
 
-function makeState(overrides: Partial<NotificationState> = {}): NotificationState {
+function makeState(
+  overrides: Partial<NotificationState> = {},
+): NotificationState {
   return {
     items: [],
     unreadCount: 0,
@@ -28,10 +32,15 @@ function makeState(overrides: Partial<NotificationState> = {}): NotificationStat
 
 describe("notificationSlice reducers", () => {
   it("notificationReceived: thêm notification mới lên đầu danh sách và tăng unreadCount", () => {
-    const state = makeState({ items: [makeNotification({ id: 1 })], unreadCount: 1 });
+    const state = makeState({
+      items: [makeNotification({ id: 1 })],
+      unreadCount: 1,
+    });
     const next = notificationReducer(
       state,
-      notificationReceived(makeNotification({ id: 2, message: "Đã thêm sản phẩm khác" }))
+      notificationReceived(
+        makeNotification({ id: 2, message: "Đã thêm sản phẩm khác" }),
+      ),
     );
 
     expect(next.items).toHaveLength(2);
@@ -46,7 +55,10 @@ describe("notificationSlice reducers", () => {
       makeNotification({ id: 2, isRead: false }),
       makeNotification({ id: 3, isRead: false }),
     ];
-    const next = notificationReducer(state, fetchNotifications.fulfilled(serverData, "reqId"));
+    const next = notificationReducer(
+      state,
+      fetchNotifications.fulfilled(serverData, "reqId"),
+    );
 
     expect(next.status).toBe("succeeded");
     expect(next.items).toEqual(serverData);
@@ -55,10 +67,16 @@ describe("notificationSlice reducers", () => {
 
   it("markAllNotificationsRead.fulfilled: set toàn bộ isRead=true và unreadCount về 0", () => {
     const state = makeState({
-      items: [makeNotification({ id: 1, isRead: false }), makeNotification({ id: 2, isRead: false })],
+      items: [
+        makeNotification({ id: 1, isRead: false }),
+        makeNotification({ id: 2, isRead: false }),
+      ],
       unreadCount: 2,
     });
-    const next = notificationReducer(state, markAllNotificationsRead.fulfilled(undefined, "reqId"));
+    const next = notificationReducer(
+      state,
+      markAllNotificationsRead.fulfilled(undefined, "reqId"),
+    );
 
     expect(next.items.every((n) => n.isRead)).toBe(true);
     expect(next.unreadCount).toBe(0);

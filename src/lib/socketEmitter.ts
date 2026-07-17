@@ -11,10 +11,15 @@ import type { NotificationDTO } from "@/types/notification";
 // khác/máy khác) cũng nhận được thông báo của A — sai hoàn toàn với ý nghĩa
 // "thông báo của giỏ hàng tôi". Client tự join room này ngay sau khi kết nối
 // (xem src/lib/socketClient.ts).
-export function emitNotification(sessionId: string, notification: NotificationDTO): void {
+export function emitNotification(
+  sessionId: string,
+  notification: NotificationDTO,
+): void {
   const io = (globalThis as unknown as { io?: SocketIOServer }).io;
   if (!io) {
-    console.warn("[socketEmitter] io chưa sẵn sàng — bỏ qua emit (bình thường lúc build/test)");
+    console.warn(
+      "[socketEmitter] io chưa sẵn sàng — bỏ qua emit (bình thường lúc build/test)",
+    );
     return;
   }
   io.to(sessionId).emit("notification", notification);

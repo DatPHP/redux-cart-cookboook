@@ -28,7 +28,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     const body = await req.json();
     const quantity = Number(body.quantity);
     if (!Number.isInteger(quantity) || quantity <= 0) {
-      throw new ApiError(400, "quantity phải là số nguyên dương (dùng DELETE để xoá item)");
+      throw new ApiError(
+        400,
+        "quantity phải là số nguyên dương (dùng DELETE để xoá item)",
+      );
     }
 
     const cart = await getOrCreateCart(sessionId);
@@ -36,7 +39,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     if (!item) throw new ApiError(404, "Không tìm thấy item trong giỏ hàng");
 
     if (quantity > item.product.stock) {
-      throw new ApiError(409, `Chỉ còn ${item.product.stock} sản phẩm trong kho`);
+      throw new ApiError(
+        409,
+        `Chỉ còn ${item.product.stock} sản phẩm trong kho`,
+      );
     }
 
     // Không dùng try/catch quanh update() riêng lẻ để phân biệt lỗi — dùng
@@ -53,7 +59,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     try {
       await prisma.cartItem.update({ where: { id }, data: { quantity } });
     } catch (err) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === "P2025"
+      ) {
         throw new ApiError(404, "Sản phẩm này đã bị xoá khỏi giỏ trước đó");
       }
       throw err;
@@ -84,7 +93,10 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
     try {
       await prisma.cartItem.delete({ where: { id } });
     } catch (err) {
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === "P2025"
+      ) {
         throw new ApiError(404, "Sản phẩm này đã bị xoá khỏi giỏ trước đó");
       }
       throw err;
@@ -96,7 +108,9 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
       message: `Đã xoá "${item.product.name}" khỏi giỏ hàng`,
       type: "cart_item_removed",
       metadata: { productId: item.productId },
-    }).catch((err) => console.error("[notification] Lỗi khi tạo thông báo:", err));
+    }).catch((err) =>
+      console.error("[notification] Lỗi khi tạo thông báo:", err),
+    );
 
     const updated = await getOrCreateCart(sessionId);
     return Response.json(serializeCart(updated));

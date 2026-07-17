@@ -1,7 +1,7 @@
 import { prisma } from "./prisma";
 import { emitNotification } from "./socketEmitter";
 import type { NotificationDTO } from "@/types/notification";
-import type { Notification, Prisma  } from "@prisma/client";
+import type { Notification, Prisma } from "@prisma/client";
 
 function serialize(n: Notification): NotificationDTO {
   return {
@@ -37,7 +37,7 @@ export async function createAndEmitNotification(params: {
 
 export async function listRecentNotifications(
   cartId: number,
-  limit = 20
+  limit = 20,
 ): Promise<NotificationDTO[]> {
   const notifications = await prisma.notification.findMany({
     where: { cartId },

@@ -93,10 +93,13 @@ const cartSlice = createSlice({
     // giữa update-quantity có debounce và remove-item tức thời). KHÔNG dùng
     // updateQuantityRollback ở đây — rollback sẽ "hồi sinh" 1 item ma đã
     // xoá thật ở DB. Thay vào đó xoá hẳn item khỏi state để khớp thực tế.
-    itemRemovedExternally(state, action: PayloadAction<{ itemId: number; error: string }>) {
+    itemRemovedExternally(
+      state,
+      action: PayloadAction<{ itemId: number; error: string }>,
+    ) {
       state.items = state.items.filter((i) => i.id !== action.payload.itemId);
       state.mutatingItemIds = state.mutatingItemIds.filter(
-        (id) => id !== action.payload.itemId
+        (id) => id !== action.payload.itemId,
       );
       state.error = action.payload.error;
     },

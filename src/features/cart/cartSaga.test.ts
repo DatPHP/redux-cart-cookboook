@@ -13,7 +13,9 @@ import { cartApi, ApiClientError } from "@/lib/cartApi";
 describe("cartSaga — watchUpdateQuantity", () => {
   it("gọi API đúng 1 lần sau debounce và dispatch updateQuantityConfirmed khi thành công", () => {
     return expectSaga(watchUpdateQuantity)
-      .provide([[matchers.call.fn(cartApi.updateItemQuantity), { id: 1, items: [] }]])
+      .provide([
+        [matchers.call.fn(cartApi.updateItemQuantity), { id: 1, items: [] }],
+      ])
       .put(updateQuantityConfirmed({ itemId: 1 }))
       .dispatch(updateQuantityRequested({ itemId: 1, quantity: 5 }))
       .silentRun(1000);
@@ -21,7 +23,9 @@ describe("cartSaga — watchUpdateQuantity", () => {
 
   it("debounce theo TỪNG itemId: đổi quantity item A rồi item B liên tiếp -> cả 2 đều được gọi API riêng biệt", () => {
     return expectSaga(watchUpdateQuantity)
-      .provide([[matchers.call.fn(cartApi.updateItemQuantity), { id: 1, items: [] }]])
+      .provide([
+        [matchers.call.fn(cartApi.updateItemQuantity), { id: 1, items: [] }],
+      ])
       .put(updateQuantityConfirmed({ itemId: 1 }))
       .put(updateQuantityConfirmed({ itemId: 2 }))
       .dispatch(updateQuantityRequested({ itemId: 1, quantity: 3 }))
@@ -55,14 +59,17 @@ describe("cartSaga — watchUpdateQuantity", () => {
   it("API lỗi -> dispatch updateQuantityRollback với quantity TRƯỚC ĐÓ và error message", () => {
     return expectSaga(watchUpdateQuantity)
       .provide([
-        [matchers.call.fn(cartApi.updateItemQuantity), throwError(new Error("Chỉ còn 2 sản phẩm trong kho"))],
+        [
+          matchers.call.fn(cartApi.updateItemQuantity),
+          throwError(new Error("Chỉ còn 2 sản phẩm trong kho")),
+        ],
       ])
       .put(
         updateQuantityRollback({
           itemId: 1,
           quantity: 5, // giá trị request đầu tiên = mốc rollback vì chưa từng confirm lần nào
           error: "Chỉ còn 2 sản phẩm trong kho",
-        })
+        }),
       )
       .dispatch(updateQuantityRequested({ itemId: 1, quantity: 5 }))
       .silentRun(1000);
@@ -77,7 +84,9 @@ describe("cartSaga — watchUpdateQuantity", () => {
       .provide([
         [
           matchers.call.fn(cartApi.updateItemQuantity),
-          throwError(new ApiClientError(404, "Sản phẩm này đã bị xoá khỏi giỏ trước đó")),
+          throwError(
+            new ApiClientError(404, "Sản phẩm này đã bị xoá khỏi giỏ trước đó"),
+          ),
         ],
       ])
       .not.put(
@@ -85,13 +94,13 @@ describe("cartSaga — watchUpdateQuantity", () => {
           itemId: 1,
           quantity: 5,
           error: "Sản phẩm này đã bị xoá khỏi giỏ trước đó",
-        })
+        }),
       )
       .put(
         itemRemovedExternally({
           itemId: 1,
           error: "Sản phẩm này đã bị xoá khỏi giỏ trước đó",
-        })
+        }),
       )
       .dispatch(updateQuantityRequested({ itemId: 1, quantity: 5 }))
       .silentRun(1000);

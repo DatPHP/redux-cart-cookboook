@@ -34,7 +34,9 @@ export async function DELETE(req: NextRequest) {
         sessionId,
         message: "Đã xoá toàn bộ giỏ hàng",
         type: "cart_cleared",
-      }).catch((err) => console.error("[notification] Lỗi khi tạo thông báo:", err));
+      }).catch((err) =>
+        console.error("[notification] Lỗi khi tạo thông báo:", err),
+      );
     }
 
     return Response.json({ id: cart.id, items: [] });

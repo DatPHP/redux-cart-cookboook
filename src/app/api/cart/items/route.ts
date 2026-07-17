@@ -23,7 +23,9 @@ export async function POST(req: NextRequest) {
       throw new ApiError(400, "quantity phải là số nguyên dương");
     }
 
-    const product = await prisma.product.findUnique({ where: { id: productId } });
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+    });
     if (!product || !product.isActive) {
       throw new ApiError(404, "Sản phẩm không tồn tại hoặc đã ngừng bán");
     }
@@ -50,7 +52,9 @@ export async function POST(req: NextRequest) {
       message: `Đã thêm "${product.name}" vào giỏ hàng`,
       type: "cart_item_added",
       metadata: { productId, quantity },
-    }).catch((err) => console.error("[notification] Lỗi khi tạo thông báo:", err));
+    }).catch((err) =>
+      console.error("[notification] Lỗi khi tạo thông báo:", err),
+    );
 
     const updated = await getOrCreateCart(sessionId);
     return Response.json(serializeCart(updated));

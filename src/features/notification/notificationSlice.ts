@@ -16,12 +16,12 @@ const initialState: NotificationState = {
 
 export const fetchNotifications = createAsyncThunk<NotificationDTO[]>(
   "notification/fetchNotifications",
-  () => notificationApi.fetchRecent()
+  () => notificationApi.fetchRecent(),
 );
 
 export const markAllNotificationsRead = createAsyncThunk<void>(
   "notification/markAllRead",
-  () => notificationApi.markAllRead()
+  () => notificationApi.markAllRead(),
 );
 
 const notificationSlice = createSlice({

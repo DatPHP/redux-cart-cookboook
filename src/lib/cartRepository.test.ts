@@ -35,7 +35,9 @@ describe("serializeCart", () => {
   it("chuyển Decimal price thành string (dùng .toString(), không parse lại thành number)", () => {
     // Prisma Decimal có .toString() trả về đúng chuỗi thập phân — mock tối
     // giản chỉ cần đúng method này, không cần import decimal.js thật.
-    const fakeDecimal = { toString: () => "150000.00" } as unknown as Product["price"];
+    const fakeDecimal = {
+      toString: () => "150000.00",
+    } as unknown as Product["price"];
 
     const cart = makeFakeCart({
       items: [

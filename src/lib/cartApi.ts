@@ -26,8 +26,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
-    throw new ApiClientError(res.status, body.message ?? `Request thất bại (${res.status})`);
+    const body = await res
+      .json()
+      .catch(() => ({ message: `HTTP ${res.status}` }));
+    throw new ApiClientError(
+      res.status,
+      body.message ?? `Request thất bại (${res.status})`,
+    );
   }
 
   return res.json() as Promise<T>;

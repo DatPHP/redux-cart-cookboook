@@ -121,7 +121,10 @@ describe("cartSlice reducers", () => {
     });
     const next = cartReducer(
       state,
-      itemRemovedExternally({ itemId: 1, error: "Sản phẩm này đã bị xoá khỏi giỏ trước đó" })
+      itemRemovedExternally({
+        itemId: 1,
+        error: "Sản phẩm này đã bị xoá khỏi giỏ trước đó",
+      }),
     );
 
     expect(next.items).toHaveLength(1);

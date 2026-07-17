@@ -46,6 +46,8 @@ app.prepare().then(() => {
   });
 
   httpServer.listen(port, () => {
-    console.log(`> Server (Next.js + Socket.io) ready on http://localhost:${port}`);
+    console.log(
+      `> Server (Next.js + Socket.io) ready on http://localhost:${port}`,
+    );
   });
 });

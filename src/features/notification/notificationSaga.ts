@@ -9,7 +9,9 @@ import type { NotificationDTO } from "@/types/notification";
 // socket.io-client) và saga: mỗi khi socket bắn "notification", hàm emit
 // bên trong sẽ đẩy payload đó vào channel — sau đó saga có thể `take(channel)`
 // giống hệt như take() một Redux action bình thường.
-export function createSocketChannel(socketInstance: Socket): EventChannel<NotificationDTO> {
+export function createSocketChannel(
+  socketInstance: Socket,
+): EventChannel<NotificationDTO> {
   return eventChannel<NotificationDTO>((emit) => {
     const handleNotification = (payload: NotificationDTO) => emit(payload);
     socketInstance.on("notification", handleNotification);
@@ -26,12 +28,14 @@ export function createSocketChannel(socketInstance: Socket): EventChannel<Notifi
 // Nhận socketInstance qua tham số (mặc định = singleton thật từ
 // socketClient) thay vì hardcode import bên trong — nhờ vậy test có thể
 // truyền vào 1 fake socket mà không cần jest.mock().
-export function* watchSocketNotifications(socketInstance: Socket | null = socket) {
+export function* watchSocketNotifications(
+  socketInstance: Socket | null = socket,
+) {
   if (!socketInstance) return; // SSR (không có window) — bỏ qua, không kết nối
 
   const channel: EventChannel<NotificationDTO> = yield call(
     createSocketChannel,
-    socketInstance
+    socketInstance,
   );
 
   // try/finally là bắt buộc ở đây — nếu task này bị cancel (vd HMR reload

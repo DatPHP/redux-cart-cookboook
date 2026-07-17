@@ -2,10 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchNotifications, markAllNotificationsRead } from "@/features/notification/notificationSlice";
+import {
+  fetchNotifications,
+  markAllNotificationsRead,
+} from "@/features/notification/notificationSlice";
 
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export default function NotificationBell() {
@@ -45,7 +51,9 @@ export default function NotificationBell() {
             shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
         >
           <div className="flex items-center justify-between border-b border-zinc-200 px-3 py-2 dark:border-zinc-800">
-            <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">Thông báo</span>
+            <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+              Thông báo
+            </span>
             {unreadCount > 0 && (
               <button
                 type="button"
@@ -67,11 +75,15 @@ export default function NotificationBell() {
                 <li
                   key={n.id}
                   className={`border-b border-zinc-100 px-3 py-2 text-sm last:border-0 dark:border-zinc-800 ${
-                    n.isRead ? "text-zinc-500" : "text-zinc-900 dark:text-zinc-50"
+                    n.isRead
+                      ? "text-zinc-500"
+                      : "text-zinc-900 dark:text-zinc-50"
                   }`}
                 >
                   <p>{n.message}</p>
-                  <p className="mt-0.5 text-xs text-zinc-400">{formatTime(n.createdAt)}</p>
+                  <p className="mt-0.5 text-xs text-zinc-400">
+                    {formatTime(n.createdAt)}
+                  </p>
                 </li>
               ))
             )}

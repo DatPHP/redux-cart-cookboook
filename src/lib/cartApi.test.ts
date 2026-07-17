@@ -2,17 +2,27 @@
 // testEnvironment "node" (không có window/localStorage). Test này chỉ
 // quan tâm hành vi xử lý response của request(), không quan tâm session
 // id thật sự là gì.
-jest.mock("./cartSession", () => ({ getCartSessionId: () => "test-session-id" }));
+jest.mock("./cartSession", () => ({
+  getCartSessionId: () => "test-session-id",
+}));
 
 import { cartApi, ApiClientError } from "./cartApi";
 
-function mockFetchOnce(response: { ok: boolean; status: number; json: () => Promise<unknown> }) {
+function mockFetchOnce(response: {
+  ok: boolean;
+  status: number;
+  json: () => Promise<unknown>;
+}) {
   global.fetch = jest.fn().mockResolvedValueOnce(response);
 }
 
 describe("cartApi — xử lý lỗi HTTP qua ApiClientError", () => {
   it("request thành công: trả về đúng JSON body, không throw", async () => {
-    mockFetchOnce({ ok: true, status: 200, json: async () => ({ id: 1, items: [] }) });
+    mockFetchOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({ id: 1, items: [] }),
+    });
 
     const result = await cartApi.fetchCart();
 
@@ -23,7 +33,9 @@ describe("cartApi — xử lý lỗi HTTP qua ApiClientError", () => {
     mockFetchOnce({
       ok: false,
       status: 404,
-      json: async () => ({ message: "Sản phẩm này đã bị xoá khỏi giỏ trước đó" }),
+      json: async () => ({
+        message: "Sản phẩm này đã bị xoá khỏi giỏ trước đó",
+      }),
     });
 
     await expect(cartApi.updateItemQuantity(1, 5)).rejects.toMatchObject({
@@ -33,7 +45,11 @@ describe("cartApi — xử lý lỗi HTTP qua ApiClientError", () => {
   });
 
   it("throw đúng instance ApiClientError (không phải Error thường) để cartSaga phân biệt được bằng instanceof", async () => {
-    mockFetchOnce({ ok: false, status: 409, json: async () => ({ message: "Hết hàng" }) });
+    mockFetchOnce({
+      ok: false,
+      status: 409,
+      json: async () => ({ message: "Hết hàng" }),
+    });
 
     await expect(cartApi.addItem(1, 2)).rejects.toBeInstanceOf(ApiClientError);
   });
