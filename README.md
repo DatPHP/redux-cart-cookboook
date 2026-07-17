@@ -122,4 +122,4 @@ docker compose up --build
 - [x] **Phase 2** — Core Redux Cart: cartSlice, cartThunk (fetchCart/addItemToCart/removeCartItem/clearCart), cartSaga (debounce per-itemId + optimistic update + rollback), API routes, 10 unit test
 - [x] **Phase 3** — UI: ProductList (react-query) + CartPanel (Redux) — verify optimistic update + debounce trên trình duyệt thật, cart persist qua Neon
 - [x] **Phase 4** — WebSocket notification: Socket.io server, eventChannel trong saga, notification bell UI
-- [ ] **Phase 5** — CI/CD (GitHub Actions) + mở rộng test coverage + (optional) BullMQ queue cho xử lý Order async
+- [x] **Phase 5** — CI/CD (GitHub Actions) + mở rộng test coverage + (optional) BullMQ queue cho xử lý Order async
