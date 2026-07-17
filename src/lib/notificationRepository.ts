@@ -1,7 +1,7 @@
 import { prisma } from "./prisma";
 import { emitNotification } from "./socketEmitter";
 import type { NotificationDTO } from "@/types/notification";
-import type { Notification } from "@prisma/client";
+import type { Notification, Prisma  } from "@prisma/client";
 
 function serialize(n: Notification): NotificationDTO {
   return {
@@ -22,7 +22,7 @@ export async function createAndEmitNotification(params: {
   sessionId: string;
   message: string;
   type: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Prisma.InputJsonValue;
 }): Promise<void> {
   const notification = await prisma.notification.create({
     data: {
