@@ -57,3 +57,36 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
       - run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Build ĐÚNG image sẽ deploy thật — job này tồn tại vì đã có lần
+      # Dockerfile "tưởng đúng" (build không lỗi) nhưng container crash
+      # ngay lúc chạy do thiếu file (server.ts không được copy vào runner
+      # stage). `npm run build` ở job "build" phía trên KHÔNG bắt được lỗi
+      # loại này — phải build + CHẠY THẬT container mới lộ ra.
+      - run: docker build -t cart-redux-practice:ci .
+
+      - name: Chạy container và đợi healthcheck
+        run: |
+          docker run -d --name smoke-test -p 3000:3000 \
+            -e DATABASE_URL="postgresql://user:password@localhost:5432/dummy" \
+            -e DIRECT_URL="postgresql://user:password@localhost:5432/dummy" \
+            cart-redux-practice:ci
+          for i in $(seq 1 15); do
+            if curl -sf http://localhost:3000/api/health > /dev/null; then
+              echo "Healthcheck OK"
+              exit 0
+            fi
+            echo "Đợi container sẵn sàng... ($i/15)"
+            sleep 2
+          done
+          echo "Container không healthy sau 30s — in log để debug:"
+          docker logs smoke-test
+          exit 1
+
+      - name: Dọn container (luôn chạy, kể cả bước trên fail)
+        if: always()
+        run: docker rm -f smoke-test || true
